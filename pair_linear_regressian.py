@@ -13,8 +13,7 @@ class PairLinearRegressian:
         else:
             self.optimizer = optimizer
 
-    @classmethod
-    def _check_dim(cls, X):
+    def _check_dim(self, X):
         if X.shape[1] == 1:
             return np.hstack((np.array([1] * X.shape[0]).reshape(-1, 1), X))
         elif X.shape[1] == 2:
@@ -22,15 +21,13 @@ class PairLinearRegressian:
         else:
             raise ValueError
 
-    @classmethod
-    def _grad_intercept(cls, X, y, coef, random_index=None):
+    def _grad_intercept(self, X, y, coef, random_index=None):
         if random_index is None:
             return np.mean(X @ coef - y)
         else:
             return X[random_index] @ coef - y[random_index]
 
-    @classmethod
-    def _grad_slope(cls, X, y, coef, random_index=None):
+    def _grad_slope(self, X, y, coef, random_index=None):
         if random_index is None:
             return np.mean(X.T * (X @ coef - y))
         else:

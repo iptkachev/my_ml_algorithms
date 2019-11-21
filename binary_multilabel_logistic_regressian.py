@@ -26,8 +26,7 @@ class MyLogisticRegression(BaseEstimator):
             self.alpha = 1. / C
             self.beta = 0.
 
-    @classmethod
-    def _check_intercept(cls, X):
+    def _check_intercept(self, X):
         ones_vector = np.ones((X.shape[0], 1))
         if isinstance(X, pd.DataFrame):
             X = X.values
@@ -36,8 +35,8 @@ class MyLogisticRegression(BaseEstimator):
         else:
             return np.hstack((ones_vector, X))
 
-    @classmethod
-    def _sigmoid(cls, x):
+    @staticmethod
+    def _sigmoid(x):
         return 1 / (1 + np.exp(-x))
 
     @property
