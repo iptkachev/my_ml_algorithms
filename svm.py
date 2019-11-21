@@ -14,7 +14,6 @@ class MySVC(BaseEstimator):
         self.w = None
         self.b = None
 
-    @classmethod
     def _lagrange_func(self, X, y, alphas):
         return - (alphas.sum() - 0.5 * np.sum([alphas[i] * alphas[j] * y[i] * y[j] * np.dot(x_i, x_j)
                                                for i, x_i in enumerate(X) for j, x_j in enumerate(X)]))
@@ -32,8 +31,8 @@ class MySVC(BaseEstimator):
         alphas = self._info['x']
         index_sv = np.where(alphas > 1e-04)[0]
         self.support_vectors = X[index_sv, :]
-        self.w = (y.reshape(-1, 1) * alphas.reshape(-1, 1) * X).sum(axis=0)
-        self.b = (self.w * X[index_sv[0], :]).sum() - y[index_sv[0]]
+        self.w = (y.reshape(-1, 1) * alphas.reshape(-1, 1) * X).sum(0)
+        self.b = (y[index_sv] - (self.w * self.support_vectors).sum(1)).mean()
 
     def predict(self, X):
         pred = np.sign((self.w * X).sum(1) - self.b)
