@@ -4,13 +4,14 @@ from decision_tree import DecisionTree
 
 
 class BaggingClassifierCustom(BaseEstimator):
-    def __init__(self, metric, n_estimators=10, max_depth=3, random_state=17):
+    def __init__(self, estimator, metric, n_estimators=10, max_depth=3, random_state=17):
+        self.class_estimator = estimator
         self.n_estimators = n_estimators
         self.max_depth = max_depth
         self.random_state = random_state
         self.metric = metric
         # в данном списке будем хранить отдельные деревья
-        self.trees = []
+        self.estimators = []
         # в данном списке будем хранить объекты, которые не попали в обучающую выборку
         self.oob = []
 
@@ -30,11 +31,10 @@ class BaggingClassifierCustom(BaseEstimator):
             bootstrap_samples = np.random.choice(indexes, size=size_X, replace=True)
             oob_indexes = indexes[~np.isin(indexes, bootstrap_samples)]
 
-            dt = DecisionTree(max_depth=self.max_depth, random_state=self.random_state)
-            dt.fit(X[bootstrap_samples, :],
-                   y[bootstrap_samples])
-            dt.oob_indexes = oob_indexes
-            self.trees.append(dt)
+            estimator = self.class_estimator
+            estimator.fit(X[bootstrap_samples, :], y[bootstrap_samples])
+            estimator.oob_indexes = oob_indexes
+            self.estimators.append(estimator)
 
         return self
 
@@ -42,13 +42,13 @@ class BaggingClassifierCustom(BaseEstimator):
 
         # Ваш код здесь
         probs = np.zeros(X.shape[0])
-        for i, tree in enumerate(self.trees):
+        for i, tree in enumerate(self.estimators):
             if i == 0:
                 probs = tree.predict_proba(X)
             else:
                 probs += tree.predict_proba(X)
 
-        probs /= len(self.trees)
+        probs /= len(self.estimators)
 
         return probs
 
@@ -57,8 +57,8 @@ class BaggingClassifierCustom(BaseEstimator):
         y = self._isinstance_check(y)
         metric_score = 0.
 
-        for tree in self.trees:
-            metric_score += self.metric(y[tree.oob_indexes], tree.predict_proba(X[tree.oob_indexes, :])[:, 0])
-        metric_score /= len(self.trees)
+        for est in self.estimators:
+            metric_score += self.metric(y[est.oob_indexes], est.predict_proba(X[est.oob_indexes, :])[:, 0])
+        metric_score /= len(self.estimators)
 
         return metric_score

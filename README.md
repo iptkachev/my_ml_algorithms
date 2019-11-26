@@ -1,2 +1,8 @@
-# my_ml_algorithms
-My own implementation of ml algorithms
+My own implementation of ml algorithms:
+- DecisionTree
+- SupportVectorMachine
+- LogisticRegressian
+- GridSearch
+- LinearRegressian
+- BaggingClassifier
+- AdaBoostClassifier
