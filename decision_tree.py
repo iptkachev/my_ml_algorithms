@@ -94,6 +94,8 @@ class DecisionTree(BaseEstimator):
             else:
                 node.labels = y[node.labels]
 
+        return self
+
     def _down_to_leaf(self, obj, node):
         while node.left and node.right:
             if obj[node.feature_idx] < node.threshold:

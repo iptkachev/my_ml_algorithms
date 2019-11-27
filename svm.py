@@ -41,6 +41,8 @@ class MySVC(BaseEstimator):
         self.w = (y.reshape(-1, 1) * self._alphas.reshape(-1, 1) * X).sum(0)
         self.b = ((self.w * self.support_vectors).sum(1) - y[self._index_sv]).mean()
 
+        return self
+
     def predict(self, X):
         pred = np.sign((self.w * X).sum(1) - self.b)
         pred[np.isin(pred, -1)] = 0

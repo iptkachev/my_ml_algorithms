@@ -51,6 +51,8 @@ class PairLinearRegressian:
         print(i)
         self._fitted = True
 
+        return self
+
     def predict(self, X):
         X = self._check_dim(X)
         if self._fitted:

@@ -71,6 +71,8 @@ class MyLogisticRegression(BaseEstimator):
         print(i)
         self._fitted = True
 
+        return self
+
     def predict_proba(self, X):
         X = self._check_intercept(X)
         if self._fitted:

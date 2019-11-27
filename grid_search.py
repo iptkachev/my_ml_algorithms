@@ -49,3 +49,5 @@ class MyGridSearchCV:
         self.best_score_ = self.cv_results_[self.best_index_]['mean_score'][0]
         self.best_params_ = self.cv_results_[self.best_index_]['params'][0]
         self.best_estimator_ = self.estimator.set_params(**self.best_params_)
+
+        return self
