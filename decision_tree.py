@@ -1,11 +1,12 @@
 import numpy as np
+import warnings
 from collections import Counter
 from sklearn.base import BaseEstimator
 from tree_criterions import *
+warnings.filterwarnings('ignore')
 
 
 class Node:
-
     def __init__(self, feature_idx=None, threshold=None, depth=None, labels=None, left=None, right=None):
         self.depth = depth
         self.feature_idx = feature_idx
@@ -16,7 +17,6 @@ class Node:
 
 
 class DecisionTree(BaseEstimator):
-
     def __init__(self, max_depth=np.inf, min_samples_split=2, criterion='gini', random_state=17):
         self.random_state = random_state
         self.max_depth = max_depth
@@ -102,6 +102,7 @@ class DecisionTree(BaseEstimator):
                 node = node.left
             else:
                 node = node.right
+
         return node
 
     def predict(self, X):

@@ -1,8 +1,8 @@
 import numpy as np
+
 from tqdm import tqdm
 from sklearn.base import BaseEstimator
-from sklearn.metrics import log_loss, mean_squared_error, roc_auc_score, accuracy_score
-from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
+from sklearn.metrics import log_loss, mean_squared_error
 from decision_tree import DecisionTree
 
 
@@ -44,6 +44,7 @@ class GradientBoostingCustom(BaseEstimator):
 
     def log_loss_grad(self, y, p):
         p[p < 10e-5] = 10e-5
+        p[p == 1.] = 0.999999
         return (p - y) / (p * (1 - p))
 
     def mse_grad(self, y, p):
@@ -57,30 +58,27 @@ class GradientBoostingCustom(BaseEstimator):
         return np.power(p.size * (p + 1) * self.rmsle(y, p), -1) * np.log((p + 1) / (y + 1))
 
     def poisson(self, y, p):
-        return - (y * p - np.exp(p)).sum()
+        return (p - y * np.log1p(p)).mean()
 
     def grad_possion(self, y, p):
-        return - y + np.exp(p)
+        return - y / ((1 + p) * y.size)
 
     def fit(self, X, y):
-        if self.loss in [mean_squared_error, self.rmsle]:
-            est = DecisionTreeRegressor(max_depth=self.max_depth)
-        elif self.loss in [self.poisson, log_loss]:
-            est = DecisionTreeClassifier(max_depth=self.max_depth)
+        if self.loss in [mean_squared_error, self.poisson, self.rmsle]:
+            est = DecisionTree(max_depth=self.max_depth, criterion='variance')
+        elif self.loss in [log_loss]:
+            est = DecisionTree(max_depth=self.max_depth, criterion='gini')
             est.predict = est.predict_proba
         est.fit(X, y)
         y_t = est.predict(X)
         if len(y_t.shape) == 2:
             y_t = y_t[:, 0].reshape(-1)
         self.trees_.append(est)
-a
+
         for _ in tqdm(range(self.n_estimators)):
             loss_t = self.loss(y, y_t)
             residuals_t = - self.grad(y, y_t)
-            if self.loss in [mean_squared_error, self.rmsle]:
-                est = DecisionTreeRegressor(max_depth=self.max_depth)
-            elif self.loss in [self.poisson, log_loss]:
-                est = DecisionTreeRegressor(max_depth=self.max_depth)
+            est = DecisionTree(max_depth=self.max_depth, criterion='variance')
             est.fit(X, residuals_t)
             self.loss_by_iter_.append(loss_t)
             self.trees_.append(est)
@@ -95,7 +93,7 @@ a
 
     def predict_proba(self, X):
         if self.loss in [log_loss]:
-            y_pred = self.trees_[0].predict(X)
+            y_pred = self.trees_[0].predict(X)[:, 0].reshape(-1)
             for est in self.trees_[1:]:
                 y_pred += self.learning_rate * est.predict(X)
             return self.sigma(y_pred)
@@ -107,20 +105,7 @@ a
             return (self.predict_proba(X) > 0.5).astype(int)
         else:
             y_pred = self.trees_[0].predict(X)
-            print(y_pred)
             for tree in self.trees_[1:]:
                 y_pred += self.learning_rate * tree.predict(X)
             return y_pred
 
-import pandas as pd
-from sklearn.datasets import load_digits, load_iris, load_boston
-data = load_boston()
-X, y = data['data'], data['target']
-data = pd.read_csv('task2.csv')
-X, y = data.iloc[:, [0, 1]], data.iloc[:, 2]
-gbm = GradientBoostingCustom('log_loss', max_depth=2, learning_rate=0.1, debug=True)
-gbm.fit(X, y)
-print(gbm.predict(X))
-print(log_loss(y, gbm.predict(X)))
-# print(mean_squared_error(y, gbm.predict(X)))
-print(gbm.loss_by_iter_)

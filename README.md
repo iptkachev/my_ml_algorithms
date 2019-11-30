@@ -1,8 +1,9 @@
 My own implementation of ml algorithms:
-- DecisionTree
-- SupportVectorMachine
-- LogisticRegressian
+- DecisionTree (regressian, classificaton)
+- SupportVectorMachine (classificaton)
+- LogisticRegressian (classificaton)
 - GridSearch
-- LinearRegressian
-- BaggingClassifier
-- AdaBoostClassifier
+- LinearRegressian (regressian)
+- BaggingClassifier (classificaton)
+- AdaBoostClassifier (classificaton)
+- GradientBoostingMachine (regressian, classificaton)
