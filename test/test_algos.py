@@ -24,3 +24,6 @@ tree = DecisionTreeClassifier(max_depth=4,)
 ada = AdaBoostClassifier(estimator=tree, n_estimators=200)
 ada.fit(X, y)
 print((ada.predict(X) == y).sum())
+
+
+from xgboost import XGBClassifier
