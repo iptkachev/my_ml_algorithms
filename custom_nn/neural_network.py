@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 from tqdm import tqdm
 from math import ceil
-from cnn.utils import *
+from custom_nn.utils import *
 
 __all__ = ['Net', 'Layer']
 
@@ -67,18 +67,18 @@ class Net(NNObject):
         for layer in self.layers[1:]:
             input = layer.forward(input)
 
-        return X
+        return input
 
     def backward(self, X, y, learning_rate):
         y_pred = self.forward(X)
         loss = self.loss_fn.activate(y, y_pred)
         grad_val = self.loss_fn.grad(y, y_pred)
         print(loss)
-
+        print(grad_val.shape)
         for layer in reversed(self.layers):
-            print(grad_val.shape)
-            print(layer.backward(X).shape)
             grad_val *= layer.backward(X)
+            print(layer.backward(X).shape)
+            print(grad_val.shape)
             layer.W -= learning_rate * grad_val
 
     def train(self, X, y, learning_rate, epochs, batch_size):
