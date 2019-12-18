@@ -20,15 +20,16 @@ class NNObject(ABC):
 class Layer(NNObject):
     def __init__(self, input_size, output_size, activate_fn):
         self.W = np.random.random((input_size, output_size))
-        if activate_fn == 'relu':
+        self.activate_fn_value = activate_fn
+        if self.activate_fn_value == 'relu':
             self.activate_fn = ReLU.activate
             self.grad = ReLU.grad
 
-        elif activate_fn == 'sigmoid':
+        elif self.activate_fn_value == 'sigmoid':
             self.activate_fn = Sigmoid.activate
             self.grad = Sigmoid.grad
 
-        elif activate_fn == 'linear':
+        elif self.activate_fn_value == 'linear':
             self.activate_fn = Linear.activate
             self.grad = Linear.grad
 
@@ -36,7 +37,7 @@ class Layer(NNObject):
         return self.activate_fn(X @ self.W)
 
     def backward(self, X):
-        return self.grad(X @ self.W)
+        return self.grad(X)
 
 
 class InitLayer(NNObject):
@@ -76,8 +77,9 @@ class Net(NNObject):
         print(loss)
         print(grad_val.shape)
         for layer in reversed(self.layers):
-            grad_val *= layer.backward(X)
+            print(layer.W.shape)
             print(layer.backward(X).shape)
+            grad_val = layer.backward(X) * grad_val
             print(grad_val.shape)
             layer.W -= learning_rate * grad_val
 
