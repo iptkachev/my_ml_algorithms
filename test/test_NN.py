@@ -12,7 +12,7 @@ y[y == -1] = 0
 # print(layer.backward(X))
 
 # net
-net = Net(LogLoss, Layer(input_size=2, output_size=3, activate_fn='relu'),
-          Layer(input_size=3, output_size=1, activate_fn='sigmoid'))
+net = Net(LogLoss, Layer(input_size=2, output_size=3, activate_fn_val='relu'),
+          Layer(input_size=3, output_size=1, activate_fn_val='sigmoid'))
 # print((net.forward(X) > 0.5).sum())
 net.train(X.values, y.values, 0.05, 1, 8)

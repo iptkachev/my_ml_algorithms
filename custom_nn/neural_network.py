@@ -18,39 +18,32 @@ class NNObject(ABC):
 
 
 class Layer(NNObject):
-    def __init__(self, input_size, output_size, activate_fn):
+    def __init__(self, input_size, output_size, activate_fn_val):
         self.W = np.random.random((input_size, output_size))
-        self.activate_fn_value = activate_fn
-        if self.activate_fn_value == 'relu':
+        self.activate_fn_val = activate_fn_val
+        if self.activate_fn_val == 'relu':
             self.activate_fn = ReLU.activate
             self.grad = ReLU.grad
 
-        elif self.activate_fn_value == 'sigmoid':
+        elif self.activate_fn_val == 'sigmoid':
             self.activate_fn = Sigmoid.activate
             self.grad = Sigmoid.grad
 
-        elif self.activate_fn_value == 'linear':
+        elif self.activate_fn_val == 'linear':
             self.activate_fn = Linear.activate
             self.grad = Linear.grad
 
     def forward(self, X):
+        print(X.shape, self.W.shape)
         return self.activate_fn(X @ self.W)
 
     def backward(self, X):
-        return self.grad(X)
-
-
-class InitLayer(NNObject):
-    def forward(self, x):
-        return x
-
-    def backward(self, x):
-        return x
+        return self.grad(X @ self.W)
 
 
 class Net(NNObject):
     def __init__(self, loss_fn, *layers, **kwargs):
-        self.layers = [InitLayer()] + list(layers)
+        self.layers = list(layers)
         self.random_state = kwargs.get('random_state', 10)
         self.loss_fn = loss_fn
 
@@ -63,23 +56,34 @@ class Net(NNObject):
 
             yield X[idx, :], y[idx]
 
-    def forward(self, X):
+    def forward(self, X, return_outputs=None):
+        if return_outputs:
+            outputs = []
         input = self.layers[0].forward(X)
         for layer in self.layers[1:]:
+            if return_outputs:
+                outputs.append(input)
             input = layer.forward(input)
-
+        if return_outputs:
+            return input, outputs
         return input
 
     def backward(self, X, y, learning_rate):
-        y_pred = self.forward(X)
+        y_pred, layers_outputs = self.forward(X, True)
         loss = self.loss_fn.activate(y, y_pred)
         grad_val = self.loss_fn.grad(y, y_pred)
         print(loss)
         print(grad_val.shape)
-        for layer in reversed(self.layers):
-            print(layer.W.shape)
-            print(layer.backward(X).shape)
-            grad_val = layer.backward(X) * grad_val
+        for i, layer in enumerate(reversed(self.layers)):
+            if not i + 1 == len(self.layers):
+                input = layers_outputs[-(i + 1)]
+            else:
+                input = X
+            print('grad_val', grad_val.shape)
+            print('input', input.shape)
+            print('layer.W', layer.W.shape)
+            print('layer.backward', layer.backward(input).shape)
+            grad_val = input.T @ (layer.backward(input) * grad_val)
             print(grad_val.shape)
             layer.W -= learning_rate * grad_val
 
