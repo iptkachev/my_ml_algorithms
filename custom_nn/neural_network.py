@@ -18,8 +18,12 @@ class NNObject(ABC):
 
 
 class Layer(NNObject):
-    def __init__(self, input_size, output_size, activate_fn):
-        self.W = np.random.uniform(-1, 1, (input_size, output_size))
+    def __init__(self, input_size, output_size, activate_fn, last_layer=False):
+        if not last_layer:
+            output_size = output_size + 1
+        self.random_state = None
+        np.random.seed(self.random_state)
+        self.W = np.random.uniform(-1, 1, (input_size + 1, output_size))
         self.activate_fn = activate_fn.activate
         self.grad = activate_fn.grad
 
@@ -57,9 +61,11 @@ class Net(NNObject):
             return np.hstack((ones_vector, X))
 
     def add_layer(self, layer):
+        layer.random_state = self.random_state
         self.layers.append(layer)
 
     def forward(self, X, return_outputs=None):
+        X = self._check_intercept(X)
         if return_outputs:
             outputs = []
             input = self.layers[0].forward(X)
@@ -74,6 +80,7 @@ class Net(NNObject):
             return input
 
     def backward(self, X, y, learning_rate):
+        X = self._check_intercept(X)
         y_pred, layers_outputs = self.forward(X, return_outputs=True)
         layers_outputs = layers_outputs[::-1]
         layers_outputs.append(X)
@@ -88,7 +95,7 @@ class Net(NNObject):
 
     def train(self, X, y, learning_rate: float, epochs: int, batch_size: int, verbose=10):
         for e in tqdm(range(epochs)):
-            for b, (X_batch, y_batch) in enumerate(tqdm(self._batch_generator(X, y, batch_size))):
+            for b, (X_batch, y_batch) in enumerate(self._batch_generator(X, y, batch_size)):
                 self.backward(X_batch, y_batch, learning_rate)
                 if e * b % verbose == 0 and e * b >= verbose:
                     print('Training loss', self.loss_fn.activate(y, self.forward(X)))
