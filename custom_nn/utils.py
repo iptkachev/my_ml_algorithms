@@ -1,7 +1,7 @@
 from abc import ABC
 import numpy as np
 
-__all__ = ['Linear', 'Sigmoid', 'ReLU', 'LogLoss']
+__all__ = ['Linear', 'Sigmoid', 'ReLU', 'LogLoss', 'MSELoss']
 
 
 class ActivateFunc(ABC):
@@ -17,14 +17,14 @@ class ActivateFunc(ABC):
 class LogLoss(ActivateFunc):
     @classmethod
     def activate(cls, y_true, y_pred):
-        return - (y_true * np.log(y_pred) + (1 - y_true) * np.log(y_pred)).sum()
+        return - (y_true * np.log(y_pred) + (1 - y_true) * np.log(1 - y_pred)).mean()
 
     @classmethod
     def grad(cls, y_true, y_pred):
-        return - (y_true / y_pred + (1 - y_true) / (1 - y_pred))
+        return - (y_true / y_pred - (1 - y_true) / (1 - y_pred)) / y_true.shape[0]
 
 
-class MSE(ActivateFunc):
+class MSELoss(ActivateFunc):
     @classmethod
     def activate(cls, y_true, y_pred):
         return np.power(y_true - y_pred, 2).mean()
@@ -41,12 +41,14 @@ class Linear(ActivateFunc):
 
     @classmethod
     def grad(cls, x):
-        return 1
+        return np.ones(x.shape)
 
 
 class Sigmoid(ActivateFunc):
     @classmethod
     def activate(cls, x):
+        x[x > 100] = 100
+        x[x < -100] = -100
         return 1 / (1 + np.exp(-x))
 
     @classmethod
