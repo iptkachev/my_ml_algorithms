@@ -79,7 +79,7 @@ class Net(NNObject):
                 input = layer.forward(input)
             return input
 
-    def backward(self, X, y, learning_rate):
+    def backward(self, X, y, learning_rate: float):
         X = self._check_intercept(X)
         y_pred, layers_outputs = self.forward(X, return_outputs=True)
         layers_outputs = layers_outputs[::-1]

@@ -23,6 +23,7 @@ class DecisionTree(BaseEstimator):
         self.min_samples_split = min_samples_split
         self.criterion = criterion
         self.nodes = []
+        self._num_thresholds = 10
 
         if self.criterion == 'gini':
             self.func_criterion = gini
@@ -50,17 +51,17 @@ class DecisionTree(BaseEstimator):
         n = labels.shape[0]
         best_feat_idx = None
         best_t = None
-        best_ig = 0.
+        best_ig = -1.
 
         for i_feat in features:
             X_feat = X[labels, i_feat]
-            for t in np.linspace(X_feat.min(), X_feat.max())[1:-1]:
+            for t in np.linspace(X_feat.min(), X_feat.max(), num=self._num_thresholds)[1:-1]:
                 left_ind = labels[np.where(X_feat < t)[0]]
                 n_left = left_ind.size
                 right_ind = labels[np.where(X_feat >= t)[0]]
                 n_rigth = right_ind.size
-                info_gain = self.func_criterion(y[labels]) - n_left / n * self.func_criterion(y[left_ind]) \
-                            - n_rigth / n * self.func_criterion(y[right_ind])
+                info_gain = self.func_criterion(y[labels]) - n_left / n * self.func_criterion(y[left_ind]) - \
+                            n_rigth / n * self.func_criterion(y[right_ind])
 
                 if info_gain > best_ig:
                     best_t = t
@@ -106,6 +107,7 @@ class DecisionTree(BaseEstimator):
         return node
 
     def predict(self, X):
+        X = self._isinstance_check(X)
         y_pred = np.zeros(X.shape[0])
         for i, obj in enumerate(X):
             root = self.nodes[0]
@@ -119,6 +121,7 @@ class DecisionTree(BaseEstimator):
         return y_pred
 
     def predict_proba(self, X):
+        X = self._isinstance_check(X)
         if self.criterion in ['gini', 'entropy']:
             y_pred = np.zeros((X.shape[0], len(self.classes_indexes)))
             for i, obj in enumerate(X):

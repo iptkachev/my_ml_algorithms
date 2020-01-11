@@ -4,10 +4,9 @@ from decision_tree import DecisionTree
 
 
 class BaggingClassifierCustom(BaseEstimator):
-    def __init__(self, estimator, metric, n_estimators=10, max_depth=3, random_state=17):
+    def __init__(self, estimator, metric, n_estimators=10, random_state=17):
         self.class_estimator = estimator
         self.n_estimators = n_estimators
-        self.max_depth = max_depth
         self.random_state = random_state
         self.metric = metric
         # в данном списке будем хранить отдельные деревья
@@ -51,6 +50,9 @@ class BaggingClassifierCustom(BaseEstimator):
         probs /= len(self.estimators)
 
         return probs
+
+    def predict(self, X):
+        return (self.predict_proba(X) > 0.5).astype(int)[:, 1]
 
     def oob_score(self, X, y):
         X = self._isinstance_check(X)
