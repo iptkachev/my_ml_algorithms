@@ -7,7 +7,7 @@ from decision_tree import DecisionTree
 
 
 class GradientBoostingCustom(BaseEstimator):
-    def __init__(self, loss='mse', n_estimators=10, learning_rate=10e-2, max_depth=3,
+    def __init__(self, loss='mse', n_estimators=10, learning_rate=1e-2, max_depth=3,
                  debug=False, random_state=17):
         self.n_estimators = n_estimators
         self.learning_rate = learning_rate
@@ -109,3 +109,13 @@ class GradientBoostingCustom(BaseEstimator):
                 y_pred += self.learning_rate * tree.predict(X)
             return y_pred
 
+b = []
+class A:
+    def __init__(self, i):
+        self.b = i
+    def __repr__(self):
+        return str(self.b)
+for i in range(10):
+    a = A(i)
+    b.append(a)
+b

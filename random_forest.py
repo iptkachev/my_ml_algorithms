@@ -22,7 +22,7 @@ class RandomForestClassifierCustom(BaseEstimator):
     def fit(self, X, y):
         X = self._isinstance_check(X)
         y = self._isinstance_check(y)
-        size_X = len(X)
+        size_X = X.shape[0]
         indexes = np.arange(0, size_X)
         col_indexes = np.arange(0, X.shape[1])
         if X.shape[1] >= int(X.shape[1] * self.max_features):
