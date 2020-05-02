@@ -4,11 +4,10 @@ from tqdm import tqdm
 from sklearn.base import BaseEstimator
 from sklearn.metrics import log_loss, mean_squared_error
 from decision_tree import DecisionTree
-
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 class GradientBoostingCustom(BaseEstimator):
-    def __init__(self, loss='mse', n_estimators=10, learning_rate=1e-2, max_depth=3,
-                 debug=False, random_state=17):
+    def __init__(self, loss, n_estimators=10, learning_rate=1e-2, max_depth=3, debug=False, random_state=17):
         self.n_estimators = n_estimators
         self.learning_rate = learning_rate
         self.max_depth = max_depth
@@ -27,12 +26,17 @@ class GradientBoostingCustom(BaseEstimator):
             self.grad = self.rmsle_grad
 
         elif loss == 'log_loss':
-            self.loss = log_loss
+            self.loss = self.log_loss
             self.grad = self.log_loss_grad
 
         elif loss == 'poisson':
             self.loss = self.poisson
             self.grad = self.grad_possion
+
+    def limit_p(self, p):
+        p[p < 10e-5] = 10e-5
+        p[p >= 1.] = 0.999999
+        return p
 
     def sigma(self, z):
         z[z > 100] = 100
@@ -40,11 +44,11 @@ class GradientBoostingCustom(BaseEstimator):
         return 1 / (1 + np.exp(-z))
 
     def log_loss(self, y, p):
+        p = self.limit_p(p)
         return log_loss(y, p)
 
     def log_loss_grad(self, y, p):
-        p[p < 10e-5] = 10e-5
-        p[p == 1.] = 0.999999
+        p = self.limit_p(p)
         return (p - y) / (p * (1 - p))
 
     def mse_grad(self, y, p):
@@ -64,58 +68,33 @@ class GradientBoostingCustom(BaseEstimator):
         return - y / ((1 + p) * y.size)
 
     def fit(self, X, y):
-        if self.loss in [mean_squared_error, self.poisson, self.rmsle]:
-            est = DecisionTree(max_depth=self.max_depth, criterion='variance')
-        elif self.loss in [log_loss]:
-            est = DecisionTree(max_depth=self.max_depth, criterion='gini')
-            est.predict = est.predict_proba
+        est = DecisionTreeRegressor(max_depth=self.max_depth)
         est.fit(X, y)
         y_t = est.predict(X)
-        if len(y_t.shape) == 2:
-            y_t = y_t[:, 0].reshape(-1)
-        self.trees_.append(est)
 
         for _ in tqdm(range(self.n_estimators)):
-            loss_t = self.loss(y, y_t)
-            residuals_t = - self.grad(y, y_t)
-            est = DecisionTree(max_depth=self.max_depth, criterion='variance')
-            est.fit(X, residuals_t)
-            self.loss_by_iter_.append(loss_t)
             self.trees_.append(est)
-            if self.debug:
-                self.residuals_by_iter_.append(residuals_t)
+            loss_t = self.loss(y, y_t)
+            self.loss_by_iter_.append(loss_t)
+            residuals_t = - self.grad(y, y_t)
+            est = DecisionTreeRegressor(max_depth=self.max_depth)
+            est.fit(X, residuals_t)
             h_t = est.predict(X)
-            if len(y_t.shape) == 2:
-                h_t = h_t[:, 0].reshape(-1)
             y_t += self.learning_rate * h_t
-
+        print(self.loss_by_iter_)
         return self
 
     def predict_proba(self, X):
-        if self.loss in [log_loss]:
-            y_pred = self.trees_[0].predict(X)[:, 0].reshape(-1)
-            for est in self.trees_[1:]:
-                y_pred += self.learning_rate * est.predict(X)
-            return self.sigma(y_pred)
-        else:
-            raise ValueError
+        y_pred = self.trees_[0].predict(X)
+        for tree in self.trees_[1:]:
+            y_pred += tree.predict(X)
+        return self.sigma(y_pred)
 
     def predict(self, X):
-        if self.loss in [log_loss]:
-            return (self.predict_proba(X) > 0.5).astype(int)
+        y_pred = self.trees_[0].predict(X)
+        for tree in self.trees_[1:]:
+            y_pred += tree.predict(X)
+        if self.loss in [self.log_loss]:
+            return (self.sigma(y_pred) > 0.5).astype(int)
         else:
-            y_pred = self.trees_[0].predict(X)
-            for tree in self.trees_[1:]:
-                y_pred += self.learning_rate * tree.predict(X)
             return y_pred
-
-b = []
-class A:
-    def __init__(self, i):
-        self.b = i
-    def __repr__(self):
-        return str(self.b)
-for i in range(10):
-    a = A(i)
-    b.append(a)
-b
