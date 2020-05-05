@@ -20,7 +20,7 @@ y = df['SeriousDlqin2yrs'].fillna(0).reset_index(drop=True)
 X = df.drop('SeriousDlqin2yrs', axis=1)
 data = load_breast_cancer()
 X, y = data['data'], data['target']
-gbm = GradientBoostingCustom('log_loss', max_depth=3, learning_rate=0.01, debug=True, n_estimators=50)
+gbm = GradientBoostingCustom('log_loss', use_custom_tree=True, max_depth=3, learning_rate=0.1)
 # gbm = DecisionTreeClassifier(max_depth=3)
 # gbm = DecisionTree(criterion='variance')
 gbm.fit(X, y)
