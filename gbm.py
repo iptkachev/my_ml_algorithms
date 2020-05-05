@@ -37,7 +37,7 @@ class GradientBoostingCustom(BaseEstimator):
             self.loss = self.poisson
             self.grad = self.grad_possion
 
-    def sigma(self, z):
+    def _sigma(self, z):
         z[z > 100] = 100
         z[z < -100] = -100
         return 1 / (1 + np.exp(-z))
@@ -45,25 +45,25 @@ class GradientBoostingCustom(BaseEstimator):
     def log_loss(self, y, p):
         return log_loss(y, p)
 
-    def log_loss_grad(self, y, p):
+    def _log_loss_grad(self, y, p):
         p[p == 0.] = 10e-5
         p[p == 1.] = 1 - 10e-5
         return (p - y) / (p * (1 - p))
 
-    def mse_grad(self, y, p):
+    def _mse_grad(self, y, p):
         return - 2 / y.size * (y - p)
 
     def rmsle(self, y, p):
         return np.sqrt(np.power(np.log1p(y) - np.log1p(p), 2).mean())
 
-    def rmsle_grad(self, y, p):
+    def _rmsle_grad(self, y, p):
         p[p < 10e-5] = 10e-5
         return np.power(p.size * (p + 1) * self.rmsle(y, p), -1) * np.log((p + 1) / (y + 1))
 
     def poisson(self, y, p):
         return (p - y * np.log1p(p)).mean()
 
-    def grad_possion(self, y, p):
+    def _grad_possion(self, y, p):
         return - y / ((1 + p) * y.size)
 
     def fit(self, X, y):
