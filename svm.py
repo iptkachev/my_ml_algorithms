@@ -4,20 +4,15 @@ from scipy.optimize import minimize
 from sklearn.base import BaseEstimator
 
 
-class MySVC(BaseEstimator):
-
+class CustomSVC(BaseEstimator):
     def __init__(self, C=10):
         self.C = C
-        self._info = None
-        self._lagrange_f = None
+        self._debug_minimize_info = None
+        self._alphas = None
+        self._support_vectors_indexes = None
         self.support_vectors = None
         self.w = None
         self.b = None
-
-    def _isinstance_check(self, array):
-        if not isinstance(array, np.ndarray):
-            array = np.asarray(array)
-        return array
 
     def _lagrange_func(self, X, y, alphas):
         return - (alphas.sum() - 0.5 * np.sum([alphas[i] * alphas[j] * y[i] * y[j] * np.dot(x_i, x_j)
@@ -29,17 +24,16 @@ class MySVC(BaseEstimator):
                 {"type": "ineq", "fun": lambda alphas: alphas}]
 
     def fit(self, X, y):
-        y = self._isinstance_check(y).copy()
-        X = self._isinstance_check(X)
+        y = np.copy(y)
         y[y == 0] = -1
         init_alphas = np.zeros((X.shape[0]))
-        self._lagrange_f = partial(self._lagrange_func, X, y)
-        self._info = minimize(self._lagrange_f, init_alphas, constraints=self._cons(y))
-        self._alphas = self._info['x']
-        self._index_sv = np.where(self._alphas > 0.)[0]
-        self.support_vectors = X[self._index_sv, :]
-        self.w = (y.reshape(-1, 1) * self._alphas.reshape(-1, 1) * X).sum(0)
-        self.b = ((self.w * self.support_vectors).sum(1) - y[self._index_sv]).mean()
+        lagrange_func = partial(self._lagrange_func, X, y)
+        self._debug_minimize_info = minimize(lagrange_func, init_alphas, constraints=self._cons(y))
+        self._alphas = self._debug_minimize_info['x']
+        self._support_vectors_indexes = np.where(self._alphas > 0.)[0]
+        self.support_vectors = X[self._support_vectors_indexes, :]
+        self.w = (y.reshape(-1, 1) * self._alphas.reshape(-1, 1) * X).sum(axis=0)
+        self.b = ((self.w * self.support_vectors).sum(1) - y[self._support_vectors_indexes]).mean()
 
         return self
 

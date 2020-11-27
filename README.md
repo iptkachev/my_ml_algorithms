@@ -1,13 +1,13 @@
-My own implementation of ml algorithms:
-- DecisionTree (regressian, classification)
+Implementation of machine learning algorithms (UNECON ML course):
+- DecisionTree (regression, classification)
 - SupportVectorMachine (classification)
-- LogisticRegressian (classification)
+- LogisticRegression (classification)
 - GridSearch
-- LinearRegressian (regressian)
+- LinearRegression (regression)
 - BaggingClassifier (classification)
 - AdaBoostClassifier (classification)
-- GradientBoostingMachine (regressian, classification)
-- Custom NeuralNetwork Framework (regressian, classificaton):
-    1) all possible architectures (CNN and RNN are not acceptable yet)
+- GradientBoostingMachine (regression, classification)
+- Custom NeuralNetwork Framework (regression, classification):
+    1) all possible architectures (CNN and RNN are not acceptable)
     2) available activation functions: ReLU, Sigmoid, Linear
-    3) loss functions: MSE, Logloss (only binary classificaton)
+    3) loss functions: MSE, Logloss (only binary classification)

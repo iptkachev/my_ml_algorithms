@@ -64,9 +64,9 @@ class Net(NNObject):
         layer.random_state = self.random_state
         self.layers.append(layer)
 
-    def forward(self, X, return_outputs=None):
+    def forward(self, X, return_layers_outputs=None):
         X = self._check_intercept(X)
-        if return_outputs:
+        if return_layers_outputs:
             outputs = []
             input = self.layers[0].forward(X)
             for layer in self.layers[1:]:
@@ -81,7 +81,7 @@ class Net(NNObject):
 
     def backward(self, X, y, learning_rate: float):
         X = self._check_intercept(X)
-        y_pred, layers_outputs = self.forward(X, return_outputs=True)
+        y_pred, layers_outputs = self.forward(X, return_layers_outputs=True)
         layers_outputs = layers_outputs[::-1]
         layers_outputs.append(X)
         reversed_layers = self.layers[::-1]
@@ -93,7 +93,9 @@ class Net(NNObject):
             grad_W = input.T @ grad_val
             layer.W -= learning_rate * grad_W
 
-    def train(self, X, y, learning_rate: float, epochs: int, batch_size: int, verbose=10):
+    def fit(self, X, y, learning_rate: float = 0.1, epochs: int = 1000, batch_size: int = 128, verbose: int = 1000):
+        y = np.copy(y)
+        y = y.reshape(-1, 1)
         for e in tqdm(range(epochs)):
             for b, (X_batch, y_batch) in enumerate(self._batch_generator(X, y, batch_size)):
                 self.backward(X_batch, y_batch, learning_rate)

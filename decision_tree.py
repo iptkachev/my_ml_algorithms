@@ -1,19 +1,22 @@
+from __future__ import annotations
 import numpy as np
 import warnings
 from collections import Counter
 from sklearn.base import BaseEstimator
+from dataclasses import dataclass
+from typing import List
 from tree_criterions import *
 warnings.filterwarnings('ignore')
 
 
+@dataclass
 class Node:
-    def __init__(self, feature_idx=None, threshold=None, depth=None, labels=None, left=None, right=None):
-        self.depth = depth
-        self.feature_idx = feature_idx
-        self.threshold = threshold
-        self.labels = labels
-        self.left = left
-        self.right = right
+    feature_idx: List[int] = None
+    threshold: float = None
+    depth: int = None
+    labels: np.array = None
+    left: Node = None
+    right: Node = None
 
 
 class DecisionTree(BaseEstimator):
