@@ -10,11 +10,6 @@ from test.test_template import TestCase
 class TestDecisionTree(TestCase):
     def test_dtree_classification(self):
         data = load_iris()
-        X_train, X_test, y_train, y_test = train_test_split(
-            data['data'], data['target'], test_size=0.2, random_state=17
-        )
-
-        data = load_iris()
         custom_dtree = DecisionTree()
         sklearn_dtree = DecisionTreeClassifier()
         self._test_template(data, accuracy_score, custom_dtree, sklearn_dtree, delta=0.07)
