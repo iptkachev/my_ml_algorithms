@@ -10,45 +10,6 @@ from custom_nn.neural_network import Net, Layer
 from custom_nn.utils import LogLoss, MSELoss, ReLU, Sigmoid, Linear
 from test.test_template import TestCase
 
-sc = StandardScaler()
-data = load_boston()
-X_r, y_r = data['data'], data['target']
-X_r = sc.fit_transform(X_r)
-#
-# # df = pd.read_csv('task2.csv')
-# # X = df.iloc[:, [0, 1]]
-# # y = df.iloc[:, [2]]
-# # y[y == -1] = 0
-#
-# df = pd.read_csv("./data/apples_pears.csv")
-# X = df.iloc[:, [0, 1]]
-# y = df.iloc[:, [2]]
-#
-# # layer
-# # layer = Layer(X.shape[1], 1, 'sigmoid')
-# # print(layer.forward(X))
-# # print(layer.backward(X))
-#
-# # net classification
-# net = Net(LogLoss, random_state=10)
-# net.add_layer(Layer(input_size=2, output_size=20, activate_fn=Linear()))
-# net.add_layer(Layer(input_size=20, output_size=2, activate_fn=Sigmoid()))
-# net.add_layer(Layer(input_size=2, output_size=1, activate_fn=Sigmoid(), last_layer=True))
-# net.train(X.values, y.values, learning_rate=0.1, epochs=1000, batch_size=128, verbose=1000)
-# pred = net(X.values)
-# pred = (pred > 0.5).astype('int')
-# print(np.unique(pred))
-# print(accuracy_score(y.values.reshape(-1), pred))
-
-# net regressian
-# net = Net(MSELoss(), random_state=10)
-# net.add_layer(Layer(input_size=13, output_size=10, activate_fn=Linear()))
-# net.add_layer(Layer(input_size=10, output_size=10, activate_fn=Sigmoid()))
-# net.add_layer(Layer(input_size=10, output_size=1, activate_fn=Linear()))
-# net.forward(X_r)
-# net.fit(X_r, y_r.reshape(-1, 1), 0.001, 2000, 32)
-# pred = net(X_r)
-
 
 class TestNeuralNetworkCustom(TestCase):
     def test_custom_neural_network_classification(self):
