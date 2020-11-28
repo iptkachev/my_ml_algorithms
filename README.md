@@ -1,4 +1,4 @@
-Implementation of machine learning algorithms (UNECON ML course):
+# Implementation of machine learning algorithms (UNECON ML course):
 - DecisionTree (regression, classification)
 - SupportVectorMachine (classification)
 - LogisticRegression (classification)
