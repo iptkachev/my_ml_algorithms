@@ -12,7 +12,7 @@ class TestGradientBoostingCustom(TestCase):
         custom_gbm = GradientBoostingCustom('log_loss', use_custom_tree=True, n_estimators=10,
                                             max_depth=3, learning_rate=0.1)
         sklearn_gbm = GradientBoostingClassifier('deviance', learning_rate=0.1, n_estimators=10, max_depth=3)
-        self._test_template(data, accuracy_score, custom_gbm, sklearn_gbm, delta=0.02)
+        self._test_template(data, accuracy_score, custom_gbm, sklearn_gbm, delta=0.05)
 
     def test_custom_gbm_regression(self):
         data = load_diabetes()

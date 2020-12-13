@@ -9,8 +9,6 @@ from decision_tree import DecisionTree
 
 class GradientBoostingCustom(BaseEstimator):
     def __init__(self, loss, use_custom_tree=False, n_estimators=10, learning_rate=1e-1, max_depth=3):
-        super().__init__(use_custom_tree, max_depth)
-
         self.n_estimators = n_estimators
         self.learning_rate = learning_rate
         self.max_depth = max_depth
@@ -94,7 +92,7 @@ class GradientBoostingCustom(BaseEstimator):
         y_pred = self.trees_[0].predict(X)
         for tree in tqdm(self.trees_[1:]):
             y_pred += tree.predict(X)
-        if self.loss in [self.log_loss]:
+        if self.loss in [self._log_loss]:
             return (self._sigma(y_pred) > 0.5).astype(int)
         else:
             return y_pred

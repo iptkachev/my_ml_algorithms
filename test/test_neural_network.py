@@ -13,7 +13,7 @@ from test.test_template import TestCase
 
 class TestNeuralNetworkCustom(TestCase):
     def test_custom_neural_network_classification(self):
-        df = pd.read_csv("./data/apples_pears.csv").values
+        df = pd.read_csv("test/data/apples_pears.csv").values
         X = df[:, [0, 1]]
         y = df[:, [2]]
         input_size = X.shape[1]
