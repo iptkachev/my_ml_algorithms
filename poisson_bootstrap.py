@@ -4,7 +4,7 @@ import pandas as pd
 
 def get_resampled_data(data: pd.Series, n_resamples: int, random_state: int = None) -> pd.DataFrame:
     """
-    Получить бутстрапированную таблицу
+    Получить бутстрапированную таблицу через пуассоновское распределение
     :param n_resamples: количество бутстрапов
     :param data: исходная статистика
     :return:
@@ -21,7 +21,3 @@ def get_resampled_data(data: pd.Series, n_resamples: int, random_state: int = No
     data["count_by_resample_id"] = data["resample_count_by_id"].apply(lambda x: x[1])
 
     return data.drop(columns=["resample_count_by_id"])
-
-
-if __name__ == '__main__':
-    print(get_resampled_data(pd.Series([1, 4]), 3, 10))
