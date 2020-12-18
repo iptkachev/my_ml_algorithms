@@ -13,9 +13,8 @@ class SVD(MatrixFactorizationBase):
         self.learning_rate = learning_rate
         self.l2_regularization = l2_regularization
 
-        self._user_biases = None
-        self._item_biases = None
-        self._common_bias = None
+        self._user_bias = None
+        self._item_bias = None
 
         self._loss_by_iterations = []
 
@@ -28,9 +27,9 @@ class SVD(MatrixFactorizationBase):
         for _ in tqdm(range(self.iterations), position=0, leave=True):
             residual = self._residual(user_items)
             self.user_factors -= self.learning_rate * self._grad_user(residual)
-            self._user_biases -= self.learning_rate * self._grad_user_bias(residual)
+            self._user_bias -= self.learning_rate * self._grad_user_bias(residual)
             self.item_factors -= self.learning_rate * self._grad_item(residual)
-            self._item_biases -= self.learning_rate * self._grad_item_bias(residual)
+            self._item_bias -= self.learning_rate * self._grad_item_bias(residual)
 
             self._loss_by_iterations.append(self._loss(residual))
 
@@ -41,24 +40,20 @@ class SVD(MatrixFactorizationBase):
     def _init_matrices(self, n_items, n_users):
         self.item_factors = np.random.uniform(0, 1 / np.sqrt(self.factors), (n_items, self.factors))
         self.user_factors = np.random.uniform(0, 1 / np.sqrt(self.factors), (n_users, self.factors))
-        self._item_biases = np.random.uniform(0, 1 / np.sqrt(self.factors), (n_items, 1))
-        self._user_biases = np.random.uniform(0, 1 / np.sqrt(self.factors), (n_users, 1))
+        self._item_bias = np.random.uniform(0, 1 / np.sqrt(self.factors), (n_items, 1))
+        self._user_bias = np.random.uniform(0, 1 / np.sqrt(self.factors), (n_users, 1))
         self._common_bias = np.random.uniform(0, 1 / np.sqrt(self.factors))
-
-    def _compute_norms(self):
-        self.item_norms = np.linalg.norm(self.item_factors, axis=1)
-        self.user_norms = np.linalg.norm(self.user_factors, axis=1)
 
     def _residual(self, user_items):
         return (
-            self.user_factors @ self.item_factors.T + self._user_biases + self._item_biases.T - user_items
+            self.user_factors @ self.item_factors.T + self._user_bias + self._item_bias.T - user_items
         )
 
     def _loss(self, residual):
         return (
             np.power(residual, 2).sum() +
             self.l2_regularization * (
-                np.power(np.linalg.norm(self._user_biases), 2) + np.power(np.linalg.norm(self._item_biases), 2)
+                np.power(np.linalg.norm(self._user_bias), 2) + np.power(np.linalg.norm(self._item_bias), 2)
             )
         )
 
@@ -66,10 +61,10 @@ class SVD(MatrixFactorizationBase):
         return 2 * (residual @ self.item_factors + self.l2_regularization * self.user_factors)
 
     def _grad_user_bias(self, residual):
-        return 2 * (residual.mean(axis=1) + self.l2_regularization * self._user_biases)
+        return 2 * (residual.mean(axis=1) + self.l2_regularization * self._user_bias)
 
     def _grad_item(self, residual):
         return 2 * (residual.T @ self.user_factors + self.l2_regularization * self.item_factors)
 
     def _grad_item_bias(self, residual):
-        return 2 * (residual.T.mean(axis=1) + self.l2_regularization * self._item_biases)
+        return 2 * (residual.T.mean(axis=1) + self.l2_regularization * self._item_bias)

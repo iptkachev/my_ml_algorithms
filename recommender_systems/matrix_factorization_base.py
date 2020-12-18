@@ -17,6 +17,10 @@ class MatrixFactorizationBase(ABC):
     def fit(self, user_items: csr_matrix) -> MatrixFactorizationBase:
         pass
 
+    def _compute_norms(self):
+        self.item_norms = np.linalg.norm(self.item_factors, axis=1)
+        self.user_norms = np.linalg.norm(self.user_factors, axis=1)
+
     def similar_items(self, item_id: int, top_k: int = 10):
         """
         By cosine similarity
@@ -26,7 +30,7 @@ class MatrixFactorizationBase(ABC):
         """
         item_vector = self.item_factors[item_id]
         item_norm = self.item_norms[item_id]
-        cos_similar = self.item_factors.dot(item_vector) / (self.item_norms * item_norm)
+        cos_similar = self.item_factors.dot(item_vector) / (self.item_norms * item_norm + 1e-8)
         top_k_similar = np.argsort(cos_similar)[-top_k:][::-1]
 
         return list(zip(top_k_similar.tolist(), cos_similar.take(top_k_similar).tolist()))
