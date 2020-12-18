@@ -45,6 +45,6 @@ class MatrixFactorizationBase(ABC):
         """
         user_vector = self.user_factors[user_id]
         user_products = self.item_factors.dot(user_vector)
-        top_k_similar = np.delete(np.argsort(user_products), user_items, axis=0)[-top_k:][::-1]
+        top_k_recommend = np.delete(np.argsort(user_products), user_items, axis=0)[-top_k:][::-1]
 
-        return list(zip(top_k_similar.tolist(), user_products.take(top_k_similar).tolist()))
+        return list(zip(top_k_recommend.tolist(), user_products.take(top_k_recommend).tolist()))
