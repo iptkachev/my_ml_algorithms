@@ -42,7 +42,6 @@ class SVD(MatrixFactorizationBase):
         self.user_factors = np.random.uniform(0, 1 / np.sqrt(self.factors), (n_users, self.factors))
         self._item_bias = np.random.uniform(0, 1 / np.sqrt(self.factors), (n_items, 1))
         self._user_bias = np.random.uniform(0, 1 / np.sqrt(self.factors), (n_users, 1))
-        self._common_bias = np.random.uniform(0, 1 / np.sqrt(self.factors))
 
     def _residual(self, user_items):
         return (
