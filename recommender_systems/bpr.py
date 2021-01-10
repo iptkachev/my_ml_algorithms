@@ -7,7 +7,7 @@ class BPR(MatrixFactorizationBase):
     """
     By https://arxiv.org/pdf/1205.2618.pdf
     """
-    def __init__(self, factors: int = 128, iterations: int = 100, learning_rate: float = 5e-5,
+    def __init__(self, factors: int = 128, iterations: int = 40000, learning_rate: float = 5e-3,
                  l2_regularization: float = 5e-2, compute_loss=False):
         super().__init__(factors, iterations, l2_regularization, compute_loss)
         self.learning_rate = learning_rate
@@ -50,8 +50,7 @@ class BPR(MatrixFactorizationBase):
 
     def _compute_x_uij(self, u_id, i_id, j_id):
         return (
-            np.dot(self.user_factors[u_id], self.item_factors[i_id]) -
-            np.dot(self.user_factors[u_id], self.item_factors[j_id])
+            np.dot(self.user_factors[u_id], self.item_factors[i_id] - self.item_factors[j_id])
         )
 
     def _loss(self, triplet):
