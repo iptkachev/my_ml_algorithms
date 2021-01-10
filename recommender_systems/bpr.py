@@ -16,10 +16,12 @@ class BPR(MatrixFactorizationBase):
         n_users, n_items = user_items.shape
         self._init_matrices(n_items, n_users)
 
-        comparison_triplets = self._get_comparison_triplets(user_items)
-
         for i in tqdm(np.random.choice(range(n_users), self.iterations, True), position=0, leave=True):
-            u_id, i_id, j_id = comparison_triplets[i]
+            triplet = self._get_random_comparison_triplet(user_items, i, n_items)
+            if not triplet:
+                continue
+            u_id, i_id, j_id = triplet
+
             x_uij = self._compute_x_uij(u_id, i_id, j_id)
 
             self.user_factors[u_id] -= self.learning_rate * self._grad_theta(
@@ -33,18 +35,18 @@ class BPR(MatrixFactorizationBase):
             )
 
             if self._compute_loss:
-                self._loss_by_iterations.append(self._loss(comparison_triplets))
+                self._loss_by_iterations.append(self._loss(triplet))
 
         self._compute_factors_norms()
 
-    def _get_comparison_triplets(self, user_items):
-        def i2i_comparison(user_row):
-            return user_row[None].T > user_row
+    def _get_random_comparison_triplet(self, user_items, random_u_id, n_items):
+        positive_user_items = set(user_items[random_u_id].nonzero()[1])
+        negative_user_items = set(range(n_items)) - positive_user_items
 
-        pairwise_preference_tensor = np.apply_along_axis(i2i_comparison, 1, user_items)
-        comparison_triplets = list(zip(*np.where(pairwise_preference_tensor)))  # (user_id, i_id, j_id) : i_id > j_id
-
-        return np.array(comparison_triplets)
+        if not positive_user_items:
+            return tuple()
+        # (u_id, i_id, j_id) : i_id > j_id
+        return random_u_id, np.random.choice(list(positive_user_items)), np.random.choice(list(negative_user_items))
 
     def _compute_x_uij(self, u_id, i_id, j_id):
         return (
@@ -52,13 +54,15 @@ class BPR(MatrixFactorizationBase):
             np.dot(self.user_factors[u_id], self.item_factors[j_id])
         )
 
-    def _loss(self, comparison_triplets):
-        return (
-            self._sigmoid(np.apply_along_axis(lambda triplet: self._compute_x_uij(*triplet), 1, comparison_triplets)).sum() +
+    def _loss(self, triplet):
+        return - (
+            np.log(self._sigmoid(self._compute_x_uij(*triplet))) -
             self.l2_regularization * (self._compute_l2_norm(self.user_factors) + self._compute_l2_norm(self.item_factors))
         )
 
     def _sigmoid(self, x):
+        x[x < -100] = -100
+        x[x > 100] = 100
         return 1 / (1 + np.exp(-x))
 
     def _grad_theta(self, x_uij, grad_x_uij_by_theta, theta):
@@ -67,8 +71,8 @@ class BPR(MatrixFactorizationBase):
     def _grad_theta_u(self, i_id, j_id):
         return self.item_factors[i_id] - self.item_factors[j_id]
 
-    def _grad_theta_i(self, user_id):
-        return self.user_factors[user_id]
+    def _grad_theta_i(self, u_id):
+        return self.user_factors[u_id]
 
-    def _grad_theta_j(self, user_id):
-        return -self.user_factors[user_id]
+    def _grad_theta_j(self, u_id):
+        return -self.user_factors[u_id]
