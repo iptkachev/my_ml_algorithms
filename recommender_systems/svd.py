@@ -4,24 +4,19 @@ from recommender_systems.matrix_factorization_base import MatrixFactorizationBas
 
 
 class SVD(MatrixFactorizationBase):
+    """
+    By https://en.wikipedia.org/wiki/Matrix_factorization_(recommender_systems)
+    """
     def __init__(self, factors: int = 128, iterations: int = 100, learning_rate: float = 5e-5,
-                 l2_regularization: float = 1e-3):
-        super().__init__()
-        self.factors = factors
-        self.iterations = iterations
-
+                 l2_regularization: float = 1e-3, compute_loss=False):
+        super().__init__(factors, iterations, l2_regularization, compute_loss)
         self.learning_rate = learning_rate
-        self.l2_regularization = l2_regularization
 
         self._user_bias = None
         self._item_bias = None
 
-        self._loss_by_iterations = []
-
     def fit(self, user_items):
-        n_users = user_items.shape[0]
-        n_items = user_items.shape[1]
-
+        n_users, n_items = user_items.shape
         self._init_matrices(n_items, n_users)
 
         for _ in tqdm(range(self.iterations), position=0, leave=True):
@@ -31,15 +26,16 @@ class SVD(MatrixFactorizationBase):
             self.item_factors -= self.learning_rate * self._grad_item(residual)
             self._item_bias -= self.learning_rate * self._grad_item_bias(residual)
 
-            self._loss_by_iterations.append(self._loss(residual))
+            if self._compute_loss:
+                self._loss_by_iterations.append(self._loss(residual))
 
-        self._compute_norms()
+        self._compute_factors_norms()
 
         return self
 
     def _init_matrices(self, n_items, n_users):
-        self.item_factors = np.random.uniform(0, 1 / np.sqrt(self.factors), (n_items, self.factors))
-        self.user_factors = np.random.uniform(0, 1 / np.sqrt(self.factors), (n_users, self.factors))
+        super(SVD, self)._init_matrices(n_items, n_users)
+
         self._item_bias = np.random.uniform(0, 1 / np.sqrt(self.factors), (n_items, 1))
         self._user_bias = np.random.uniform(0, 1 / np.sqrt(self.factors), (n_users, 1))
 
@@ -52,7 +48,8 @@ class SVD(MatrixFactorizationBase):
         return (
             np.power(residual, 2).sum() +
             self.l2_regularization * (
-                np.power(np.linalg.norm(self._user_bias), 2) + np.power(np.linalg.norm(self._item_bias), 2)
+                self._compute_l2_norm(self._user_bias) + self._compute_l2_norm(self._item_bias) +
+                self._compute_l2_norm(self.user_factors) + self._compute_l2_norm(self.item_factors)
             )
         )
 

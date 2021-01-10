@@ -4,38 +4,26 @@ from recommender_systems.matrix_factorization_base import MatrixFactorizationBas
 
 
 class ALS(MatrixFactorizationBase):
-    def __init__(self, factors: int = 128, iterations: int = 100, l2_regularization: float = 5e-2):
-        super().__init__()
-        self.factors = factors
-        self.iterations = iterations
-
-        self.l2_regularization = l2_regularization
-
-        self._loss_by_iterations = []
-
+    """
+    By http://stanford.edu/~rezab/classes/cme323/S15/notes/lec14.pdf
+    """
     def fit(self, user_items):
-        n_users = user_items.shape[0]
-        n_items = user_items.shape[1]
-
+        n_users, n_items = user_items.shape
         self._init_matrices(n_items, n_users)
 
         for _ in tqdm(range(self.iterations), position=0, leave=True):
             self.user_factors = self._grad_user(user_items).T
             self.item_factors = self._grad_item(user_items).T
 
-            self._loss_by_iterations.append(self._loss(user_items))
+            if self._compute_loss:
+                self._loss_by_iterations.append(self._loss(user_items))
 
-        self._compute_norms()
-
-    def _init_matrices(self, n_items, n_users):
-        self.item_factors = np.random.uniform(0, 1 / np.sqrt(self.factors), (n_items, self.factors))
-        self.user_factors = np.random.uniform(0, 1 / np.sqrt(self.factors), (n_users, self.factors))
+        self._compute_factors_norms()
 
     def _loss(self, user_items):
         return (
             np.power(user_items - self.user_factors @ self.item_factors.T, 2).sum() +
-            self.l2_regularization * np.power(np.linalg.norm(self.user_factors, axis=1), 2).sum() +
-            self.l2_regularization * np.power(np.linalg.norm(self.item_factors, axis=1), 2).sum()
+            self.l2_regularization * (self._compute_l2_norm(self.user_factors) + self._compute_l2_norm(self.item_factors))
         )
 
     def _grad_user(self, user_items):
